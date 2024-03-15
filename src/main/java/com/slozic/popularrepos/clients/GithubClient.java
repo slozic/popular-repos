@@ -3,12 +3,11 @@ package com.slozic.popularrepos.clients;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.slozic.popularrepos.clients.dtos.GithubRepositoriesListDto;
+import com.slozic.popularrepos.controllers.request.QueryParameters;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
 import java.io.IOException;
@@ -18,9 +17,9 @@ import java.time.format.DateTimeFormatter;
 @Component
 @Slf4j
 public class GithubClient {
-    private RestClient restClient;
-    private ObjectMapper objectMapper;
-    @Value("${github.repositories.api}")//?q=created:2024-03-01&per_page=1&sort=stars&order=desc
+    private final RestClient restClient;
+    private final ObjectMapper objectMapper;
+    @Value("${github.repositories.api}")
     private String GITHUB_API;
 
     public GithubClient(final RestClient.Builder builder) {
@@ -31,81 +30,29 @@ public class GithubClient {
 
     /**
      * By default, we fetch the most popular repos on today's date.
-     * Use the additional method 'getPopularReposFromDateOnwards' for data from particular date onwards
+     * Use the additional query parameters for data from particular date onwards and filter by language
      *
      * @return
      * @throws IOException
      */
-    public GithubRepositoriesListDto getLatestMostPopularRepos() throws IOException {
+
+    public GithubRepositoriesListDto getPopularGithubRepos(QueryParameters queryParameters) throws IOException {
+        String query = assembleQuery(queryParameters);
         String githubResponse = restClient.get()
-                .uri(GITHUB_API, "q", "created:" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                        "sort", "stars",
-                        "order", "desc")
+                .uri(query)
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
-                .onStatus(HttpStatusCode::isError, (request, response) -> {
-                    log.error("Error occurred while calling the Github Api! {}, {} ", response.getStatusCode(), response.getStatusCode());
-                    throw new HttpClientErrorException(response.getStatusCode(), response.getStatusText());
-                })
                 .body(String.class);
-
         return objectMapper.readValue(githubResponse, GithubRepositoriesListDto.class);
     }
 
-    /**
-     * Expected valid 'Date' format is 'yyyy-MM-dd'
-     *
-     * @param date
-     * @return
-     * @throws IOException
-     */
-    public GithubRepositoriesListDto getPopularReposFromDateOnwards(String date) throws IOException {
-        String githubResponse = restClient.get()
-                .uri(GITHUB_API, "q", "created:" + date,
-                        "sort", "stars",
-                        "order", "desc")
-                .accept(MediaType.APPLICATION_JSON)
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, (request, response) -> {
-                    log.error("Error occurred while calling the Github Api! {}, {} ", response.getStatusCode(), response.getStatusCode());
-                    throw new HttpClientErrorException(response.getStatusCode(), response.getStatusText());
-                })
-                .body(String.class);
-
-        return objectMapper.readValue(githubResponse, GithubRepositoriesListDto.class);
-    }
-
-    public GithubRepositoriesListDto getPopularReposPaginated(Integer pageSize) throws IOException {
-        String githubResponse = restClient.get()
-                .uri(GITHUB_API, "q", "created:" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                        "per_page", pageSize,
-                        "sort", "stars",
-                        "order", "desc")
-                .accept(MediaType.APPLICATION_JSON)
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, (request, response) -> {
-                    log.error("Error occurred while calling the Github Api! {}, {} ", response.getStatusCode(), response.getStatusCode());
-                    throw new HttpClientErrorException(response.getStatusCode(), response.getStatusText());
-                })
-                .body(String.class);
-
-        return objectMapper.readValue(githubResponse, GithubRepositoriesListDto.class);
-    }
-
-    public GithubRepositoriesListDto getPopularReposFilteredByLanguage(String language) throws IOException {
-        String githubResponse = restClient.get()
-                .uri(GITHUB_API, "q", "created:" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                        "language", language,
-                        "sort", "stars",
-                        "order", "desc")
-                .accept(MediaType.APPLICATION_JSON)
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, (request, response) -> {
-                    log.error("Error occurred while calling the Github Api! {}, {} ", response.getStatusCode(), response.getStatusCode());
-                    throw new HttpClientErrorException(response.getStatusCode(), response.getStatusText());
-                })
-                .body(String.class);
-
-        return objectMapper.readValue(githubResponse, GithubRepositoriesListDto.class);
+    private String assembleQuery(QueryParameters queryParameters) {
+        StringBuffer sb = new StringBuffer();
+        sb.append(GITHUB_API + "?q=created:");
+        sb.append(queryParameters.date().isPresent() ? ">" + queryParameters.date().get() : LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+        sb.append(queryParameters.language().isPresent() ? " language:" + queryParameters.language().get() : "");
+        sb.append(queryParameters.pageSize().isPresent() ? "&per_page=" + queryParameters.pageSize().get() : "");
+        sb.append("&sort=stars&order=desc");
+        return sb.toString();
     }
 }
