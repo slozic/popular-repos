@@ -1,14 +1,32 @@
 package com.slozic.popularrepos.services;
 
-import com.slozic.popularrepos.dtos.PopularReposDto;
+import com.slozic.popularrepos.dtos.PopularReposListDto;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.io.IOException;
 
 @Service
 public class PopularRepoService {
-    public List<PopularReposDto> getMostPopularRepos() {
-        // TODO fetch the data from storage, otherwise call the API first
-        return List.of(new PopularReposDto("repo name", "description", "https://github/user/repo", "user", "language", 100));
+
+    private GitHubRepoService gitHubRepoService;
+
+    public PopularReposListDto getMostPopularRepos() throws IOException {
+        // Update: Here call the persisted data from the db first, before going to the external source
+        return gitHubRepoService.getLatestPopularRepos();
+    }
+
+    public PopularReposListDto getPopularReposFromDateOnwards(String date) throws IOException {
+        // Update: Here call the persisted data from the db first, before going to the external source
+        return gitHubRepoService.getPopularReposFromDateOnwards(date);
+    }
+
+    public PopularReposListDto getPopularReposPaginated(Integer pageSize) throws IOException {
+        // Update: Here call the persisted data from the db first, before going to the external source
+        return gitHubRepoService.getPopularReposPaginated(pageSize);
+    }
+
+    public PopularReposListDto getPopularReposFilteredByLanguage(String language) throws IOException {
+        // Update: Here call the persisted data from the db first, before going to the external source
+        return gitHubRepoService.getPopularReposFilteredByLanguage(language);
     }
 }

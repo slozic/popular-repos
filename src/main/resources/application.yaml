@@ -1,3 +1,8 @@
 spring:
   application:
     name: popular-repos
+
+---
+github:
+  repositories:
+    api: "https://api.github.com/search/repositories"

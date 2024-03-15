@@ -1,11 +1,13 @@
 package com.slozic.popularrepos.clients.dtos;
 
-public record GithubRepositoriesDto (
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+public record GithubRepositoriesDto(
         String name,
         String description,
         String url,
-        String user,
         String language,
-        Integer stars
+        Integer stargazersCount
 ) {
 }
