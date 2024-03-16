@@ -17,7 +17,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class GithubRepoServiceTest {
@@ -40,5 +40,22 @@ public class GithubRepoServiceTest {
         // then
         Assertions.assertThat(mostPopularReposList).isNotNull();
         Assertions.assertThat(mostPopularReposList.data()).isEqualTo(List.of(new PopularReposDto("repo name", "description", "https://github/user/repo", "", "language", 100)));
+    }
+
+    @Test
+    public void getPopularGithubRepos_shouldUseCache() throws IOException {
+        // given
+        List<GithubRepositoriesDto> githubRepositoriesDtos = List.of(new GithubRepositoriesDto("repo name", "description", "https://github/user/repo", "language", 100));
+        GithubRepositoriesListDto githubRepositoriesListDto = new GithubRepositoriesListDto(githubRepositoriesDtos);
+        when(githubClient.getPopularGithubRepos(new QueryParameters(Optional.empty(), Optional.empty(), Optional.empty()))).thenReturn(githubRepositoriesListDto);
+
+        // when
+        PopularReposListDto mostPopularReposList = gitHubRepoService.getPopularGithubRepos(new QueryParameters(Optional.empty(), Optional.empty(), Optional.empty()));
+        PopularReposListDto mostPopularReposList2 = gitHubRepoService.getPopularGithubRepos(new QueryParameters(Optional.empty(), Optional.empty(), Optional.empty()));
+
+        // then
+        Assertions.assertThat(mostPopularReposList).isNotNull();
+        Assertions.assertThat(mostPopularReposList.data()).isEqualTo(List.of(new PopularReposDto("repo name", "description", "https://github/user/repo", "", "language", 100)));
+        verify(githubClient, times(1)).getPopularGithubRepos(any());
     }
 }

@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,10 +22,16 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class GitHubRepoService {
     private final GithubClient githubClient;
+    private HashMap<QueryParameters, PopularReposListDto> cache = new HashMap<>();
 
     public PopularReposListDto getPopularGithubRepos(QueryParameters queryParameters) throws IOException {
+        if (cache.containsKey(queryParameters)) {
+            return cache.get(queryParameters);
+        }
         GithubRepositoriesListDto latestMostPopularRepos = githubClient.getPopularGithubRepos(queryParameters);
-        return mapToBusinessDto(latestMostPopularRepos);
+        PopularReposListDto popularReposListDto = mapToBusinessDto(latestMostPopularRepos);
+        cache.put(queryParameters, popularReposListDto);
+        return popularReposListDto;
     }
 
     private PopularReposListDto mapToBusinessDto(GithubRepositoriesListDto latestMostPopularRepos) {
