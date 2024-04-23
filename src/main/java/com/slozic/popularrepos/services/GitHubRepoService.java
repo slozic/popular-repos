@@ -6,10 +6,12 @@ import com.slozic.popularrepos.controllers.request.QueryParameters;
 import com.slozic.popularrepos.dtos.PopularReposDto;
 import com.slozic.popularrepos.dtos.PopularReposListDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,17 +22,14 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
+@CacheConfig(cacheNames = {"queryParameters"})
 public class GitHubRepoService {
     private final GithubClient githubClient;
-    private HashMap<QueryParameters, PopularReposListDto> cache = new HashMap<>();
 
+    @Cacheable(value = "queryParameters", key = "#queryParameters")
     public PopularReposListDto getPopularGithubRepos(QueryParameters queryParameters) throws IOException {
-        if (cache.containsKey(queryParameters)) {
-            return cache.get(queryParameters);
-        }
         GithubRepositoriesListDto latestMostPopularRepos = githubClient.getPopularGithubRepos(queryParameters);
         PopularReposListDto popularReposListDto = mapToBusinessDto(latestMostPopularRepos);
-        cache.put(queryParameters, popularReposListDto);
         return popularReposListDto;
     }
 
