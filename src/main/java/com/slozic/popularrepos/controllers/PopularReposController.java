@@ -1,6 +1,7 @@
 package com.slozic.popularrepos.controllers;
 
-import com.slozic.popularrepos.controllers.request.QueryParameters;
+import com.slozic.popularrepos.controllers.dto.GithubFilter;
+import com.slozic.popularrepos.controllers.dto.QueryParameters;
 import com.slozic.popularrepos.dtos.PopularReposListDto;
 import com.slozic.popularrepos.services.GitHubRepoService;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,8 @@ public class PopularReposController {
     public ResponseEntity<PopularReposListDto> getPopularGithubRepositories(final QueryParameters queryParameters) {
         PopularReposListDto mostPopularRepos;
         try {
-            mostPopularRepos = gitHubRepoService.getPopularGithubRepos(queryParameters);
+            GithubFilter githubFilter = queryParameters.toGithubFilter();
+            mostPopularRepos = gitHubRepoService.getPopularGithubRepos(githubFilter);
             return ResponseEntity.ok(mostPopularRepos);
         } catch (IOException e) {
             log.error("Error occurred while retrieving the github response", e);

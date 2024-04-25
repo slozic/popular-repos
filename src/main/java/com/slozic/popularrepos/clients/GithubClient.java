@@ -1,7 +1,7 @@
 package com.slozic.popularrepos.clients;
 
 import com.slozic.popularrepos.clients.dtos.GithubRepositoriesListDto;
-import com.slozic.popularrepos.controllers.request.QueryParameters;
+import com.slozic.popularrepos.controllers.dto.GithubFilter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -32,8 +32,8 @@ public class GithubClient extends ApiClient {
      * @throws IOException
      */
 
-    public GithubRepositoriesListDto getPopularGithubRepos(QueryParameters queryParameters) throws IOException {
-        UriComponents uriComponents = assembleQuery(queryParameters);
+    public GithubRepositoriesListDto getPopularGithubRepos(GithubFilter githubFilter) throws IOException {
+        UriComponents uriComponents = assembleQuery(githubFilter);
         String githubResponse = restClient.get()
                 .uri(uriComponents.toUri())
                 .accept(MediaType.APPLICATION_JSON)
@@ -42,23 +42,23 @@ public class GithubClient extends ApiClient {
         return objectMapper.readValue(githubResponse, GithubRepositoriesListDto.class);
     }
 
-    private UriComponents assembleQuery(QueryParameters queryParameters) {
+    private UriComponents assembleQuery(GithubFilter githubFilter) {
         UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.newInstance()
                 .scheme("https")
                 .host(GITHUB_API.substring(8));
 
-        if (queryParameters.date().isPresent()) {
-            uriComponentsBuilder.query("q=created:>" + queryParameters.date().get());
+        if (githubFilter.date().isPresent()) {
+            uriComponentsBuilder.query("q=created:>" + githubFilter.date().get());
         } else {
             uriComponentsBuilder.query("q=created:" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
         }
 
-        if (queryParameters.language().isPresent()) {
-            uriComponentsBuilder.query("language:" + queryParameters.language().get());
+        if (githubFilter.language().isPresent()) {
+            uriComponentsBuilder.query("language:" + githubFilter.language().get());
         }
 
-        if (queryParameters.pageSize().isPresent()) {
-            uriComponentsBuilder.query("per_page=" + queryParameters.pageSize().get());
+        if (githubFilter.pageSize().isPresent()) {
+            uriComponentsBuilder.query("per_page=" + githubFilter.pageSize().get());
         }
 
         uriComponentsBuilder.query("sort=stars");

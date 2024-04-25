@@ -1,6 +1,6 @@
 package com.slozic.popularrepos.controllers;
 
-import com.slozic.popularrepos.controllers.request.QueryParameters;
+import com.slozic.popularrepos.controllers.dto.GithubFilter;
 import com.slozic.popularrepos.dtos.PopularReposDto;
 import com.slozic.popularrepos.dtos.PopularReposListDto;
 import com.slozic.popularrepos.services.GitHubRepoService;
@@ -29,7 +29,7 @@ public class PopularReposControllerTest {
         // given
         PopularReposListDto popularReposListDto = new PopularReposListDto(List.of(
                 new PopularReposDto("repo name", "description", "https://github/user/repo", "", "language", 100)));
-        when(gitHubRepoService.getPopularGithubRepos(any(QueryParameters.class))).thenReturn(popularReposListDto);
+        when(gitHubRepoService.getPopularGithubRepos(any(GithubFilter.class))).thenReturn(popularReposListDto);
 
         // when
         var mvcResult = mockMvc.perform(get("/popular-repositories")).andReturn();

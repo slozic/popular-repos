@@ -1,4 +1,4 @@
-package com.slozic.popularrepos.controllers.request;
+package com.slozic.popularrepos.controllers.dto;
 
 import org.springframework.web.bind.annotation.PathVariable;
 
@@ -9,4 +9,7 @@ public record QueryParameters(
         @PathVariable("date") Optional<String> date,
         @PathVariable("language") Optional<String> language
 ) {
+    public GithubFilter toGithubFilter() {
+        return new GithubFilter(this.pageSize, this.date, this.language);
+    }
 }
